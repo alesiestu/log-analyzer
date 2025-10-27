@@ -1,9 +1,9 @@
 use crate::models::{LogEntry,AnalysisType};
 use std::collections::HashMap;
-use std::net::IpAddr;
 
 
-pub fn analyze(entries: Vec<LogEntry>, analysis_type: AnalysisType) -> HashMap<String, usize> {
+
+pub fn analyze(entries: &Vec<LogEntry>, analysis_type: AnalysisType) -> Vec<(String, usize)> {
     let mut analysis_result: HashMap<String, usize> = HashMap::new();
 
     match analysis_type {
@@ -19,8 +19,18 @@ pub fn analyze(entries: Vec<LogEntry>, analysis_type: AnalysisType) -> HashMap<S
                 *analysis_result.entry(ip_str).or_insert(0) += 1;
             }
         }
+        AnalysisType::CountByTimestamp => {
+            for entry in entries {
+                let timestamp_str = entry.timestamp.clone();
+                *analysis_result.entry(timestamp_str).or_insert(0) += 1;
+            }
+        }
     }
 
-    analysis_result
+    // Convertiamo la HashMap in un Vec e ordiniamo
+    let mut sorted: Vec<_> = analysis_result.into_iter().collect();
+    // Ordiniamo per conteggio (decrescente)
+    sorted.sort_by(|a, b| b.1.cmp(&a.1));
+    sorted
 }
 

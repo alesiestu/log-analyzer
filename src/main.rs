@@ -7,8 +7,9 @@ mod analyzer;
 
 
 
-fn main() {
 
+#[tokio::main]
+async fn main() {
     println!("Inserisci il path del file di log come argomento della riga di comando.");
     
     let path = std::env::args().nth(1).expect("no path given");
@@ -21,41 +22,41 @@ fn main() {
     }
 
     let content = cli::read_content_from_path(path);
-    let ip_and_status=  get_ip_and_status_codes(&content);
+    let ip_and_status = get_ip_and_status_codes(&content).await;
+
+    for entry in &ip_and_status {
+        println!("Parsed Entry: IP: {}, Status Code: {}, Timestamp: {}", entry.ip, entry.status_code, entry.timestamp);
+    }
 
 
     // Conteggio per IP
-    let result =analyzer::analyze(ip_and_status, models::AnalysisType::CountByIP);
-    
-    let mut sorted: Vec<_> = result.into_iter().collect();
-    sorted.sort_by(|a, b| a.1.cmp(&b.1));
-
+    let result =analyzer::analyze(&ip_and_status, models::AnalysisType::CountByIP);
     println!("Analisi completata. Ecco i risultati ordinati per numero di richieste maggiori di 100:");
-    for (key, value) in sorted {
+    for (key, value) in result {
         if value > 100 {
         println!("- {} ( {} richieste )", key, value);
         }
     }
 
     // Conteggio per Status Code
-    let ip_and_status=  get_ip_and_status_codes(&content);
-    let result =analyzer::analyze(ip_and_status, models::AnalysisType::CountByStatusCode);
-    let mut sorted: Vec<_> = result.into_iter().collect();
-    sorted.sort_by(|a, b| a.1.cmp(&b.1));
+    let result =analyzer::analyze(&ip_and_status, models::AnalysisType::CountByStatusCode);
 
     println!("Analisi completata. Ecco i risultati ordinati per codice di stato con più di 100 occorrenze:");
     
-    for (key, value) in sorted {
+    for (key, value) in result {
         if value > 100 {
         println!("- {} ( {} richieste )", key, value);
     } 
     }
 
-
-
-
-   
-   
+    let result =analyzer::analyze(&ip_and_status, models::AnalysisType::CountByTimestamp);
+    
+    println!("Analisi completata. Ecco i risultati ordinati per timestamp con più di 100 occorrenze:");
+    for (key, value) in result {
+        if value > 2 {
+        println!("- {} ( {} richieste )", key, value);  
+    }  
+    }
 
     
 }

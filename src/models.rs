@@ -4,10 +4,17 @@ use std::net::IpAddr;
 pub struct LogEntry {
     pub ip: IpAddr,
     pub status_code: u16,
+    pub timestamp: String,
 }
 
 
 pub enum AnalysisType {
     CountByStatusCode,
-    CountByIP
+    CountByIP,
+    CountByTimestamp
+}
+
+pub enum LogFormat {
+    Apache,
+    Nginx,
 }
